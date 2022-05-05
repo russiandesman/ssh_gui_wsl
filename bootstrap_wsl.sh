@@ -9,7 +9,6 @@ sudo apt install openssh-server
 sudo apt install putty-tools
 
 WIN_HOME=`wslpath "$(wslvar USERPROFILE)"`/WSL
-FINGERPRINT=`sudo ssh-keygen -l -E md5 -f /etc/ssh/ssh_host_ed25519_key | awk '{print $2}' | cut --delimiter=':' -f 2-`
 
 mkdir -p $WIN_HOME
 
@@ -35,31 +34,8 @@ X11Forwarding yes
 PrintMotd no
 THE_END
 
-cat > $WIN_HOME/ssh_to_wsl.bat << THE_END
-@echo off
-wsl -u root service ssh start
-FOR /F %%I IN ('wsl hostname -I') DO (SET WSL_IP=%%I)
-FOR /F %%I IN ('wsl whoami') DO (SET WSL_USER=%%I)
-ssh %WSL_USER%@%WSL_IP% -p2211 -i %USERPROFILE%\\WSL\\wsl_access.private
-THE_END
+cp windows/* $WIN_HOME/
 
-cat > $WIN_HOME/far_wsl.bat << THE_END
-@echo off
-wsl -u root service ssh start
-FOR /F %%I IN ('wsl hostname -I') DO (SET WSL_IP=%%I)
-FOR /F %%I IN ('wsl whoami') DO (SET WSL_USER=%%I)
-%X_SERVER_PATH%\\plink -hostkey $FINGERPRINT -ssh %WSL_USER%@%WSL_IP% -i %USERPROFILE%\\WSL\\wsl_access.ppk -P 2211 -X -batch far2l
-THE_END
-
-cat > $WIN_HOME/autorun_xserver.bat << THE_END
-@echo off
-start /B "Title:x-server" "%X_SERVER_PATH%\\vcxsrv.exe" :0 -multiwindow -ac -listen tcp
-THE_END
-
-cat > $WIN_HOME/run_once_in_xserver_dir.bat << THE_END
-@echo off
-setx X_SERVER_PATH "%CD%"
-copy "%USERPROFILE%\\WSL\\autorun_xserver.bat" "%USERPROFILE%\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup"
-THE_END
+echo "Now please go to Windows and run setup.vbs from WSL folder in your $(wslvar USERPROFILE)"
 
 exit 0
